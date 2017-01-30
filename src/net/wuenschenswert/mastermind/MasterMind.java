@@ -1,5 +1,8 @@
 package net.wuenschenswert.mastermind;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -9,6 +12,7 @@ public class MasterMind {
   final int länge;
   final List<BewertetesMuster> versuche = new ArrayList<>();
   final Function<Muster, Bewertung> bewerter;
+  final Random random = new Random();
 
   public MasterMind(int länge, Function<Muster, Bewertung> bewerter) {
     this.länge = länge;
@@ -16,10 +20,35 @@ public class MasterMind {
   }
 
   public static void main(String[] args) {
-    Farbe[] farben = Arrays.stream(args).map(Farbe::valueOf).toArray(Farbe[]::new);
-    Muster richtig = new Muster(farben);
-    MasterMind masterMind = new MasterMind(farben.length, muster -> Bewertung.bewerte(muster, richtig));
+    Function<Muster, Bewertung> musterBewertungFunction;
+    int länge;
+    if (Arrays.asList("-i").equals(Arrays.asList(args))) {
+      BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+      länge = 4; // hüstel
+      musterBewertungFunction = muster -> {
+        System.out.println("Versuch: "+muster);
+        System.out.print("Bewertung schwarze? ");
+        int schwarz = readInt(reader);
+        System.out.print("Bewertung weiß? ");
+        int weiß = readInt(reader);
+        return new Bewertung(schwarz, weiß);
+      };
+    } else {
+      Farbe[] farben = Arrays.stream(args).map(Farbe::valueOf).toArray(Farbe[]::new);
+      länge = farben.length;
+      Muster richtig = new Muster(farben);
+      musterBewertungFunction = muster -> Bewertung.bewerte(muster, richtig);
+    }
+    MasterMind masterMind = new MasterMind(länge, musterBewertungFunction);
     masterMind.play();
+  }
+
+  private static int readInt(BufferedReader reader) {
+    try {
+      return Integer.parseInt(reader.readLine());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void play() {
