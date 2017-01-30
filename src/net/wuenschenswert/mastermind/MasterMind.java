@@ -56,16 +56,20 @@ public class MasterMind {
   Optional<Muster> besterNächsterVersuch() {
     List<Muster> möglicheLösungen = Arrays.asList(möglicheLösungen().toArray(Muster[]::new));
     System.out.println("Anzahl möglicher Lösungen: "+möglicheLösungen.size());
-    boolean debug = möglicheLösungen.size() < 50;
-    Optional<MusterMitEntropie> nächsterVersuchMitHöchsterEntropie = möglicheLösungen.stream()
-        .map(möglicherNächsterVersuch ->
-            new MusterMitEntropie(möglicherNächsterVersuch, entropy(möglicherNächsterVersuch, möglicheLösungen)))
-        .map(mme -> {
-          if (debug) { System.out.println("  " + mme); }
-          return mme;
-        })
-        .collect(Collectors.maxBy(Comparator.comparingDouble(MusterMitEntropie::getEntropie)));
-    return nächsterVersuchMitHöchsterEntropie.map(MusterMitEntropie::getMuster);
+    Map<Double, List<Muster>> musterByEntropie = möglicheLösungen.stream()
+        .collect(Collectors.groupingBy(möglicherNächsterVersuch -> entropy(möglicherNächsterVersuch, möglicheLösungen)));
+    if (möglicheLösungen.size() < 50) {
+      System.out.println("  " + musterByEntropie);
+    }
+    Optional<Double> maxEntropieOpt = musterByEntropie.keySet().stream().max(Comparator.comparingDouble(d -> d));
+    if(!maxEntropieOpt.isPresent()) {
+      return Optional.empty();
+    }
+    List<Muster> nächsteVersucheMitHöchsterEntropie =
+        musterByEntropie.get(maxEntropieOpt.get());
+    Muster nächsterVersuchMitHöchsterEntropie =
+        nächsteVersucheMitHöchsterEntropie.get(random.nextInt(nächsteVersucheMitHöchsterEntropie.size()));
+    return Optional.of(nächsterVersuchMitHöchsterEntropie);
   }
 
   double entropy(Muster muster, List<Muster> möglicheLösungen) {
@@ -78,31 +82,5 @@ public class MasterMind {
       double p = (double) l / total;
       return -p * Math.log(p);
     }).collect(Collectors.summingDouble(Double::doubleValue));
-  }
-
-  static class MusterMitEntropie {
-    private final Muster muster;
-    private final double entropie;
-
-    public MusterMitEntropie(Muster muster, double entropie) {
-      this.muster = muster;
-      this.entropie = entropie;
-    }
-
-    public Muster getMuster() {
-      return muster;
-    }
-
-    public double getEntropie() {
-      return entropie;
-    }
-
-    @Override
-    public String toString() {
-      return "MusterMitEntropie{" +
-          "muster=" + muster +
-          ", entropie=" + entropie +
-          '}';
-    }
   }
 }

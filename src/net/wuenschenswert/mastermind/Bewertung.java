@@ -1,15 +1,12 @@
 package net.wuenschenswert.mastermind;
 
-/**
- * Created by axel on 27.01.17.
- */
 public class Bewertung {
   int schwarz, weiß;
 
   public Bewertung(int schwarz, int weiß) {
     assert schwarz >= 0;
     assert weiß >= 0;
-    assert schwarz + weiß <= 4;
+    // assert schwarz + weiß <= 4;
     // some combinations like 3/1 still don't make sense
     this.schwarz = schwarz;
     this.weiß = weiß;
